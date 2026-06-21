@@ -2,10 +2,9 @@ package com.xhsauto.app;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.GestureDescription;
-import android.content.Intent;
 import android.graphics.Path;
 import android.graphics.Rect;
-import android.os.Environment;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -20,6 +19,7 @@ import com.google.gson.JsonObject;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.List;
 
 public class XhsAccessibilityService extends AccessibilityService {
     private static final String TAG = "XhsAutoService";
@@ -35,7 +35,6 @@ public class XhsAccessibilityService extends AccessibilityService {
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
-        // 监听界面变化，可用于调试
     }
 
     @Override
@@ -130,22 +129,18 @@ public class XhsAccessibilityService extends AccessibilityService {
     
     private void performAutoPost() throws InterruptedException {
         showToast("开始自动发帖...");
-        
-        // 等待小红书启动
         Thread.sleep(3000);
         
-        // 点击发布按钮（底部中间的+号）
-        AccessibilityNodeInfo addBtn = findNodeByText("发布") || findNodeByDescription("发布");
+        AccessibilityNodeInfo addBtn = findNodeByText("发布");
+        if (addBtn == null) addBtn = findNodeByDescription("发布");
         if (addBtn != null) {
             clickNode(addBtn);
             Thread.sleep(CLICK_DELAY);
         } else {
-            // 尝试点击底部导航栏的+号
-            performClick(540, 2200); // 屏幕底部中间位置
+            performClick(540, 2200);
             Thread.sleep(CLICK_DELAY);
         }
         
-        // 选择图文
         Thread.sleep(WAIT_DELAY);
         AccessibilityNodeInfo photoOption = findNodeByText("图文");
         if (photoOption != null) {
@@ -153,19 +148,17 @@ public class XhsAccessibilityService extends AccessibilityService {
             Thread.sleep(CLICK_DELAY);
         }
         
-        // 选择图片
         Thread.sleep(WAIT_DELAY);
         selectImages();
         Thread.sleep(WAIT_DELAY);
         
-        // 点击下一步/确定
-        AccessibilityNodeInfo confirmBtn = findNodeByText("下一步") || findNodeByText("确定");
+        AccessibilityNodeInfo confirmBtn = findNodeByText("下一步");
+        if (confirmBtn == null) confirmBtn = findNodeByText("确定");
         if (confirmBtn != null) {
             clickNode(confirmBtn);
             Thread.sleep(CLICK_DELAY);
         }
         
-        // 填写标题
         Thread.sleep(WAIT_DELAY);
         JsonArray posts = config.getAsJsonArray("posts");
         if (posts != null && posts.size() > 0) {
@@ -177,16 +170,15 @@ public class XhsAccessibilityService extends AccessibilityService {
                 Thread.sleep(INPUT_DELAY);
             }
             
-            // 填写正文
             AccessibilityNodeInfo contentInput = findNodeByClassName("android.widget.EditText");
-            if (contentInput != null && contentInput != titleInput) {
+            if (contentInput != null) {
                 pasteText(contentInput, post.get("content").getAsString());
                 Thread.sleep(INPUT_DELAY);
             }
         }
         
-        // 点击发布
-        AccessibilityNodeInfo publishBtn = findNodeByText("发布笔记") || findNodeByText("发布");
+        AccessibilityNodeInfo publishBtn = findNodeByText("发布笔记");
+        if (publishBtn == null) publishBtn = findNodeByText("发布");
         if (publishBtn != null) {
             clickNode(publishBtn);
             Thread.sleep(2000);
@@ -198,18 +190,15 @@ public class XhsAccessibilityService extends AccessibilityService {
     
     private void performAutoComment() throws InterruptedException {
         showToast("开始自动评论...");
-        
-        // 等待小红书启动
         Thread.sleep(3000);
         
-        // 点击搜索
-        AccessibilityNodeInfo searchBtn = findNodeByDescription("搜索") || findNodeByText("搜索");
+        AccessibilityNodeInfo searchBtn = findNodeByDescription("搜索");
+        if (searchBtn == null) searchBtn = findNodeByText("搜索");
         if (searchBtn != null) {
             clickNode(searchBtn);
             Thread.sleep(CLICK_DELAY);
         }
         
-        // 输入搜索关键词
         Thread.sleep(WAIT_DELAY);
         JsonArray keywords = config.getAsJsonObject("comments").getAsJsonArray("keywords");
         String keyword = keywords.get(0).getAsString();
@@ -219,7 +208,6 @@ public class XhsAccessibilityService extends AccessibilityService {
             pasteText(searchInput, keyword);
             Thread.sleep(INPUT_DELAY);
             
-            // 点击搜索按钮
             AccessibilityNodeInfo searchConfirm = findNodeByText("搜索");
             if (searchConfirm != null) {
                 clickNode(searchConfirm);
@@ -227,7 +215,6 @@ public class XhsAccessibilityService extends AccessibilityService {
             }
         }
         
-        // 点击第一个帖子
         Thread.sleep(WAIT_DELAY);
         AccessibilityNodeInfo firstPost = findNodeByClassName("android.widget.FrameLayout");
         if (firstPost != null) {
@@ -235,15 +222,14 @@ public class XhsAccessibilityService extends AccessibilityService {
             Thread.sleep(CLICK_DELAY);
         }
         
-        // 点击评论输入框
         Thread.sleep(WAIT_DELAY);
-        AccessibilityNodeInfo commentInput = findNodeByText("说点什么...") || findNodeByDescription("评论");
+        AccessibilityNodeInfo commentInput = findNodeByText("说点什么...");
+        if (commentInput == null) commentInput = findNodeByDescription("评论");
         if (commentInput != null) {
             clickNode(commentInput);
             Thread.sleep(CLICK_DELAY);
         }
         
-        // 输入评论内容
         String comment = config.getAsJsonObject("comments").get("default_comment").getAsString();
         AccessibilityNodeInfo inputField = findNodeByClassName("android.widget.EditText");
         if (inputField != null) {
@@ -251,7 +237,6 @@ public class XhsAccessibilityService extends AccessibilityService {
             Thread.sleep(INPUT_DELAY);
         }
         
-        // 点击发送
         AccessibilityNodeInfo sendBtn = findNodeByText("发送");
         if (sendBtn != null) {
             clickNode(sendBtn);
@@ -263,11 +248,11 @@ public class XhsAccessibilityService extends AccessibilityService {
     }
     
     private void selectImages() {
-        // 尝试选择图片
-        AccessibilityNodeInfo imageContainer = findNodeByClassName("android.widget.GridView") 
-            || findNodeByClassName("androidx.recyclerview.widget.RecyclerView");
-        if (imageContainer != null) {
-            // 选择第一张图片
+        AccessibilityNodeInfo imageContainer = findNodeByClassName("android.widget.GridView");
+        if (imageContainer == null) {
+            imageContainer = findNodeByClassName("androidx.recyclerview.widget.RecyclerView");
+        }
+        if (imageContainer != null && imageContainer.getChildCount() > 0) {
             AccessibilityNodeInfo firstImage = imageContainer.getChild(0);
             if (firstImage != null) {
                 clickNode(firstImage);
@@ -275,18 +260,20 @@ public class XhsAccessibilityService extends AccessibilityService {
         }
     }
     
-    // ==================== 节点查找方法 ====================
-    
     private AccessibilityNodeInfo findNodeByText(String text) {
-        return getRootInActiveWindow().findAccessibilityNodeInfosByText(text).stream()
-            .findFirst()
-            .orElse(null);
+        List<AccessibilityNodeInfo> nodes = getRootInActiveWindow().findAccessibilityNodeInfosByText(text);
+        if (nodes != null && !nodes.isEmpty()) {
+            return nodes.get(0);
+        }
+        return null;
     }
     
     private AccessibilityNodeInfo findNodeByDescription(String desc) {
-        return getRootInActiveWindow().findAccessibilityNodeInfosByViewId(desc).stream()
-            .findFirst()
-            .orElse(null);
+        List<AccessibilityNodeInfo> nodes = getRootInActiveWindow().findAccessibilityNodeInfosByViewId(desc);
+        if (nodes != null && !nodes.isEmpty()) {
+            return nodes.get(0);
+        }
+        return null;
     }
     
     private AccessibilityNodeInfo findNodeByClassName(String className) {
@@ -308,8 +295,6 @@ public class XhsAccessibilityService extends AccessibilityService {
         }
         return null;
     }
-    
-    // ==================== 点击和输入方法 ====================
     
     private void clickNode(AccessibilityNodeInfo node) {
         if (node == null) return;
