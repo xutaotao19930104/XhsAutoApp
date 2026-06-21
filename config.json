@@ -1,0 +1,16 @@
+{
+  "posts": [
+    {
+      "title": "今天分享一个小技巧",
+      "content": "这是一个实用的小技巧，希望对大家有帮助！\n\n#小红书 #生活技巧 #分享",
+      "images": [
+        "/sdcard/xhsauto/images/photo1.jpg",
+        "/sdcard/xhsauto/images/photo2.jpg"
+      ]
+    }
+  ],
+  "comments": {
+    "keywords": ["生活技巧", "实用分享", "日常记录"],
+    "default_comment": "写得真好，学到了！收藏了～"
+  }
+}
