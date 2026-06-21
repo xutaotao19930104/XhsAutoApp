@@ -132,8 +132,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="自动评论"
-                android:enabled="false"
-                style="@style/Widget.MaterialComponents.Button.ColoredButton"/>
+                android:enabled="false"/>
 
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
